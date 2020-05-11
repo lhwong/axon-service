@@ -1,7 +1,9 @@
 package org.learn.axonframework.util;
 
+
 import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandMessage;
+import org.axonframework.commandhandling.CommandResultMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +17,7 @@ public class LoggingCallback<C, R> implements CommandCallback<C, R> {
     private LoggingCallback() {
     }
 
-    @Override
+    /*@Override
     public void onSuccess(CommandMessage<? extends C> commandMessage, R result) {
         logger.info("Command successful: {} -> {}", commandMessage.getPayloadType().getSimpleName(), Objects.toString(result));
     }
@@ -25,5 +27,13 @@ public class LoggingCallback<C, R> implements CommandCallback<C, R> {
         cause.printStackTrace();
         logger.info("Command failed: {} -> {}", commandMessage.getPayloadType().getSimpleName(),
                 cause.getClass().getSimpleName());
-    }
+    }*/
+
+	@Override
+	public void onResult(CommandMessage<? extends C> arg0, CommandResultMessage<? extends R> arg1) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
 }

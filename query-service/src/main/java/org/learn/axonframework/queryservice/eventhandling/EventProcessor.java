@@ -53,7 +53,7 @@ public class EventProcessor {
     @EventHandler
     public void on(ShipmentCompensatedEvent event) {
         log.info("on ShipmentCompensatedEvent");
-        Shipment shipment = shipmentRepository.findOne(event.getShipmentId());
+        Shipment shipment = shipmentRepository.findById(event.getShipmentId()).get();
         shipment.setPrice(-1);
         shipmentRepository.save(shipment);
     }
@@ -73,7 +73,7 @@ public class EventProcessor {
     @EventHandler
     public void on(InvoiceCompensatedEvent event) {
         log.info("on InvoiceCompensatedEvent");
-        Invoice invoice = invoiceRepository.findOne(event.getInvoiceId());
+        Invoice invoice = invoiceRepository.findById(event.getInvoiceId()).get();
         invoice.setInvoiceString(NOT_AVAILABLE);
         invoiceRepository.save(invoice);
     }

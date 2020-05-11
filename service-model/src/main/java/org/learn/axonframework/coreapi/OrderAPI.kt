@@ -1,6 +1,6 @@
 package org.learn.axonframework.coreapi
 
-import org.axonframework.commandhandling.TargetAggregateIdentifier
+import org.axonframework.modelling.command.TargetAggregateIdentifier
 
 //model
 data class ProductInfo(val productId: String = "", val comment: String = "", val price: Int = 0)

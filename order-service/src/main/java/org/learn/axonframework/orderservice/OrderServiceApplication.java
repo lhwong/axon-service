@@ -1,20 +1,15 @@
 package org.learn.axonframework.orderservice;
 
 import com.rabbitmq.client.Channel;
-import org.axonframework.amqp.eventhandling.DefaultAMQPMessageConverter;
-import org.axonframework.amqp.eventhandling.spring.SpringAMQPMessageSource;
-import org.axonframework.commandhandling.AsynchronousCommandBus;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.distributed.AnnotationRoutingStrategy;
 import org.axonframework.commandhandling.distributed.CommandBusConnector;
 import org.axonframework.commandhandling.distributed.CommandRouter;
 import org.axonframework.commandhandling.distributed.DistributedCommandBus;
-import org.axonframework.common.transaction.TransactionManager;
 import org.axonframework.config.SagaConfiguration;
-import org.axonframework.messaging.interceptors.BeanValidationInterceptor;
-import org.axonframework.messaging.interceptors.TransactionManagingInterceptor;
+import org.axonframework.extensions.amqp.eventhandling.AMQPMessageConverter;
+import org.axonframework.extensions.amqp.eventhandling.spring.SpringAMQPMessageSource;
 import org.axonframework.serialization.Serializer;
-import org.axonframework.spring.messaging.unitofwork.SpringTransactionManager;
 import org.axonframework.springcloud.commandhandling.SpringCloudCommandRouter;
 import org.axonframework.springcloud.commandhandling.SpringHttpCommandBusConnector;
 import org.learn.axonframework.orderservice.saga.OrderManagementSaga;
@@ -34,11 +29,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
@@ -51,12 +46,14 @@ public class OrderServiceApplication {
         SpringApplication.run(OrderServiceApplication.class, args);
     }
 
-    @Bean
+    /*@Bean
     public SagaConfiguration<OrderManagementSaga> orderManagementSagaConfiguration(
             SpringAMQPMessageSource springAMQPMessageSource, PlatformTransactionManager txManager) {
         return SagaConfiguration.subscribingSagaManager(OrderManagementSaga.class, c -> springAMQPMessageSource)
                 .configureTransactionManager(c -> new SpringTransactionManager(txManager));
-    }
+    }*/
+    
+    
 
     @Bean
     public Exchange orderExchange() {
@@ -94,7 +91,7 @@ public class OrderServiceApplication {
         admin.declareBinding(queryBinding());
     }
 
-    @Bean
+    /*@Bean
     public SpringAMQPMessageSource orderEvents(Serializer serializer) {
         return new SpringAMQPMessageSource(new DefaultAMQPMessageConverter(serializer)) {
 
@@ -105,12 +102,32 @@ public class OrderServiceApplication {
                 super.onMessage(message, channel);
             }
         };
+    }*/
+    
+    @Bean
+    public SpringAMQPMessageSource orderEvents(AMQPMessageConverter messageConverter) {
+        return new SpringAMQPMessageSource(messageConverter) {
+
+            @RabbitListener(queues = "OrderQueue")
+            @Override
+            public void onMessage(Message message, Channel channel) {
+                super.onMessage(message, channel);
+            }
+        };
     }
 
     //spring cloud settings - distributed command bus
-    @Bean
+    /*@Bean
     public CommandRouter springCloudCommandRouter(DiscoveryClient discoveryClient) {
         return new SpringCloudCommandRouter(discoveryClient, new AnnotationRoutingStrategy());
+    }*/
+    @Bean
+    public CommandRouter springCloudCommandRouter(DiscoveryClient discoveryClient, Registration localServiceInstance) {
+        return SpringCloudCommandRouter.builder()
+                                       .discoveryClient(discoveryClient)
+                                       .routingStrategy(new AnnotationRoutingStrategy())
+                                       .localServiceInstance(localServiceInstance)
+                                       .build();
     }
 
     @Bean
@@ -118,7 +135,7 @@ public class OrderServiceApplication {
         return new RestTemplate();
     }
 
-    @Bean
+    /*@Bean
     public CommandBusConnector springHttpCommandBusConnector(@Qualifier("localSegment") CommandBus localSegment,
                                                              RestOperations restOperations,
                                                              Serializer serializer) {
@@ -140,6 +157,29 @@ public class OrderServiceApplication {
         asynchronousCommandBus.registerHandlerInterceptor(new TransactionManagingInterceptor<>(transactionManager));
 
         return asynchronousCommandBus;
+    }*/
+    
+    @Bean
+    public CommandBusConnector springHttpCommandBusConnector(
+                        @Qualifier("localSegment") CommandBus localSegment,
+                        RestOperations restOperations,
+                        Serializer serializer) {
+        return SpringHttpCommandBusConnector.builder()
+                                            .localCommandBus(localSegment)
+                                            .restOperations(restOperations)
+                                            .serializer(serializer)
+                                            .build();
+    }
+
+    @Primary // to make sure this CommandBus implementation is used for autowiring
+    @Bean
+    public DistributedCommandBus springCloudDistributedCommandBus(
+                         CommandRouter commandRouter, 
+                         CommandBusConnector commandBusConnector) {
+        return DistributedCommandBus.builder()
+                                    .commandRouter(commandRouter)
+                                    .connector(commandBusConnector)
+                                    .build();
     }
 
 }

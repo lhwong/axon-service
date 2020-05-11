@@ -2,8 +2,8 @@ package org.learn.axonframework.invoiceservice.model;
 
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.learn.axonframework.coreapi.CompensateInvoiceCommand;
 import org.learn.axonframework.coreapi.InvoiceCompensatedEvent;
@@ -14,8 +14,9 @@ import org.learn.axonframework.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
-import static org.axonframework.commandhandling.model.AggregateLifecycle.markDeleted;
+import static org.axonframework.modelling.command.AggregateLifecycle.apply;
+import static org.axonframework.modelling.command.AggregateLifecycle.markDeleted;
+
 
 @NoArgsConstructor
 @Aggregate

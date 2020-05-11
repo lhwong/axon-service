@@ -2,8 +2,9 @@ package org.learn.axonframework.shipmentservice.model;
 
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.commandhandling.model.AggregateIdentifier;
+
 import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.learn.axonframework.coreapi.CompensateShipmentCommand;
 import org.learn.axonframework.coreapi.PrepareShipmentCommand;
@@ -18,8 +19,9 @@ import org.slf4j.LoggerFactory;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
-import static org.axonframework.commandhandling.model.AggregateLifecycle.markDeleted;
+import static org.axonframework.modelling.command.AggregateLifecycle.apply;
+import static org.axonframework.modelling.command.AggregateLifecycle.markDeleted;
+
 
 @NoArgsConstructor
 @Entity

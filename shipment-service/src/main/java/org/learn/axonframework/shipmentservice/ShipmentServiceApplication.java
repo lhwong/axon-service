@@ -1,14 +1,10 @@
 package org.learn.axonframework.shipmentservice;
 
-import org.axonframework.commandhandling.AsynchronousCommandBus;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.distributed.AnnotationRoutingStrategy;
 import org.axonframework.commandhandling.distributed.CommandBusConnector;
 import org.axonframework.commandhandling.distributed.CommandRouter;
 import org.axonframework.commandhandling.distributed.DistributedCommandBus;
-import org.axonframework.common.transaction.TransactionManager;
-import org.axonframework.messaging.interceptors.BeanValidationInterceptor;
-import org.axonframework.messaging.interceptors.TransactionManagingInterceptor;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.springcloud.commandhandling.SpringCloudCommandRouter;
 import org.axonframework.springcloud.commandhandling.SpringHttpCommandBusConnector;
@@ -25,9 +21,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.web.client.RestOperations;
+import org.springframework.web.client.RestTemplate;
 
 @EnableDiscoveryClient
 @SpringBootApplication
@@ -77,34 +75,42 @@ public class ShipmentServiceApplication {
 		admin.declareBinding(queryBinding());
 
 	}
+	
+	@Bean
+    public RestOperations restTemplate() {
+        return new RestTemplate();
+    }
 
 	//spring cloud settings - distributed command bus
 	@Bean
-	public CommandRouter springCloudCommandRouter(DiscoveryClient discoveryClient) {
-		return new SpringCloudCommandRouter(discoveryClient, new AnnotationRoutingStrategy());
-	}
+    public CommandRouter springCloudCommandRouter(DiscoveryClient discoveryClient, Registration localServiceInstance) {
+        return SpringCloudCommandRouter.builder()
+                                       .discoveryClient(discoveryClient)
+                                       .routingStrategy(new AnnotationRoutingStrategy())
+                                       .localServiceInstance(localServiceInstance)
+                                       .build();
+    }
 
 	@Bean
-	public CommandBusConnector springHttpCommandBusConnector(@Qualifier("localSegment") CommandBus localSegment,
-															 RestOperations restOperations,
-															 Serializer serializer) {
-		return new SpringHttpCommandBusConnector(localSegment, restOperations, serializer);
-	}
+    public CommandBusConnector springHttpCommandBusConnector(
+                        @Qualifier("localSegment") CommandBus localSegment,
+                        RestOperations restOperations,
+                        Serializer serializer) {
+        return SpringHttpCommandBusConnector.builder()
+                                            .localCommandBus(localSegment)
+                                            .restOperations(restOperations)
+                                            .serializer(serializer)
+                                            .build();
+    }
 
-	@Primary // to make sure this CommandBus implementation is used for autowiring
-	@Bean
-	public DistributedCommandBus springCloudDistributedCommandBus(CommandRouter commandRouter,
-																  CommandBusConnector commandBusConnector) {
-		return new DistributedCommandBus(commandRouter, commandBusConnector);
-	}
-
-	@Bean(destroyMethod = "shutdown")
-	@Qualifier("localSegment")
-	public CommandBus localSegment(TransactionManager transactionManager) {
-		AsynchronousCommandBus asynchronousCommandBus = new AsynchronousCommandBus();
-		asynchronousCommandBus.registerDispatchInterceptor(new BeanValidationInterceptor<>());
-		asynchronousCommandBus.registerHandlerInterceptor(new TransactionManagingInterceptor<>(transactionManager));
-
-		return asynchronousCommandBus;
-	}
+    @Primary // to make sure this CommandBus implementation is used for autowiring
+    @Bean
+    public DistributedCommandBus springCloudDistributedCommandBus(
+                         CommandRouter commandRouter, 
+                         CommandBusConnector commandBusConnector) {
+        return DistributedCommandBus.builder()
+                                    .commandRouter(commandRouter)
+                                    .connector(commandBusConnector)
+                                    .build();
+    }
 }

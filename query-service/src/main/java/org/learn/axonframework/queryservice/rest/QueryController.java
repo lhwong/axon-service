@@ -36,7 +36,7 @@ public class QueryController {
 
     @GetMapping("/order/{orderId}")
     public ResponseEntity<Order> getOrder(@PathVariable String orderId) {
-        Order order = orderRepository.findOne(orderId);
+        Order order = orderRepository.findById(orderId).get();
         return order != null ? ResponseEntity.ok(order) : ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
@@ -47,7 +47,7 @@ public class QueryController {
 
     @GetMapping("/shipment/{shipmentId}")
     public ResponseEntity<Shipment> getShipment(@PathVariable String shipmentId) {
-        Shipment shipment = shipmentRepository.findOne(shipmentId);
+        Shipment shipment = shipmentRepository.findById(shipmentId).get();
         return shipment != null ? ResponseEntity.ok(shipment) : ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
@@ -58,7 +58,7 @@ public class QueryController {
 
     @GetMapping("/invoice/{invoiceId}")
     public ResponseEntity<Invoice> getInvoice(String invoiceId) {
-        Invoice invoice = invoiceRepository.findOne(invoiceId);
+        Invoice invoice = invoiceRepository.findById(invoiceId).get();
         return invoice != null ? ResponseEntity.ok(invoice) : ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 }

@@ -1,6 +1,6 @@
 package org.learn.axonframework.orderservice.command;
 
-import org.axonframework.commandhandling.TargetAggregateIdentifier;
+import org.axonframework.modelling.command.TargetAggregateIdentifier;
 import org.learn.axonframework.coreapi.ProductInfo;
 
 public class FileOrderCommand {

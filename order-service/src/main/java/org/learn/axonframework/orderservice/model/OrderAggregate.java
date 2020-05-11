@@ -2,15 +2,17 @@ package org.learn.axonframework.orderservice.model;
 
 import lombok.NoArgsConstructor;
 import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.commandhandling.model.AggregateIdentifier;
+
 import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.learn.axonframework.coreapi.OrderCompletedEvent;
 import org.learn.axonframework.coreapi.OrderFiledEvent;
 import org.learn.axonframework.orderservice.command.FileOrderCommand;
 import org.learn.axonframework.orderservice.command.OrderCompletedCommand;
 
-import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+import static org.axonframework.modelling.command.AggregateLifecycle.apply;
+
 
 @NoArgsConstructor
 @Aggregate

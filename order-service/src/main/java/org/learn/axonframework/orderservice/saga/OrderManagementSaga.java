@@ -1,9 +1,10 @@
 package org.learn.axonframework.orderservice.saga;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.eventhandling.saga.EndSaga;
-import org.axonframework.eventhandling.saga.SagaEventHandler;
-import org.axonframework.eventhandling.saga.StartSaga;
+import org.axonframework.config.ProcessingGroup;
+import org.axonframework.modelling.saga.EndSaga;
+import org.axonframework.modelling.saga.SagaEventHandler;
+import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.spring.stereotype.Saga;
 import org.learn.axonframework.coreapi.CompensateInvoiceCommand;
 import org.learn.axonframework.coreapi.CompensateShipmentCommand;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Saga
+@ProcessingGroup("amqpEvents")
 public class OrderManagementSaga {
 
     private static final Logger log = LoggerFactory.getLogger(OrderManagementSaga.class.getSimpleName());
