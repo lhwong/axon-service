@@ -27,15 +27,16 @@
 	</properties>
 
 	<dependencies>
+	    <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.learn.axonframework</groupId>
 			<artifactId>service-model</artifactId>
 			<version>1.0</version>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-amqp</artifactId>
-		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -47,8 +48,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -58,11 +59,7 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.axonframework.extensions.amqp</groupId>
-		    <artifactId>axon-amqp</artifactId>
-			<version>${version.axon}</version>
-		</dependency>
+
 
 		<dependency>
 			<groupId>org.axonframework</groupId>
@@ -75,11 +72,25 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
-		    <groupId>org.axonframework.extensions.amqp</groupId>
-		    <artifactId>axon-amqp-spring-boot-autoconfigure</artifactId>
-		    <version>${version.axon}</version>
+        		<dependency>
+			<groupId>org.axonframework.extensions.kafka</groupId>
+		        <artifactId>axon-kafka-spring-boot-starter</artifactId>
+			<version>4.0-RC3</version>
 		</dependency>
+        <dependency>
+		    <groupId>org.axonframework.extensions.kafka</groupId>
+		    <artifactId>axon-kafka-spring-boot-autoconfigure</artifactId>
+		    <version>4.0-RC3</version>
+		</dependency>
+		<dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+		<!-- Kafka -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+        </dependency>
 
 		<dependency>
 			<groupId>io.springfox</groupId>

@@ -1,22 +1,17 @@
 package org.learn.axonframework.invoiceservice;
 
 import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.commandhandling.SimpleCommandBus;
 import org.axonframework.commandhandling.distributed.AnnotationRoutingStrategy;
 import org.axonframework.commandhandling.distributed.CommandBusConnector;
 import org.axonframework.commandhandling.distributed.CommandRouter;
 import org.axonframework.commandhandling.distributed.DistributedCommandBus;
+import org.axonframework.extensions.springcloud.commandhandling.SpringCloudCommandRouter;
+import org.axonframework.extensions.springcloud.commandhandling.SpringCloudHttpBackupCommandRouter;
+import org.axonframework.extensions.springcloud.commandhandling.SpringHttpCommandBusConnector;
 import org.axonframework.serialization.Serializer;
-import org.axonframework.springcloud.commandhandling.SpringCloudCommandRouter;
-import org.axonframework.springcloud.commandhandling.SpringHttpCommandBusConnector;
-import org.springframework.amqp.core.AmqpAdmin;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Exchange;
-import org.springframework.amqp.core.ExchangeBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.QueueBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -35,60 +30,17 @@ public class InvoiceServiceApplication {
 		SpringApplication.run(InvoiceServiceApplication.class, args);
 	}
 
-	@Bean
-	public Exchange invoiceExchange() {
-		return ExchangeBuilder.fanoutExchange("InvoiceEvents").durable(true).build();
-	}
-
-	// order AMQP queue
-
-	@Bean
-	public Queue orderQueue() {
-		return QueueBuilder.durable("OrderQueue").build();
-	}
-
-	@Bean
-	public Binding orderBinding() {
-		return BindingBuilder.bind(orderQueue()).to(invoiceExchange()).with("*").noargs();
-	}
-
-	// query AMQP queue
-
-	@Bean
-	public Queue queryQueue() {
-		return QueueBuilder.durable("QueryQueue").build();
-	}
-
-	@Bean
-	public Binding queryBinding() {
-		return BindingBuilder.bind(queryQueue()).to(invoiceExchange()).with("*").noargs();
-	}
-
-	@Autowired
-	public void configure(AmqpAdmin admin) {
-		admin.declareExchange(invoiceExchange());
-
-		admin.declareQueue(orderQueue());
-		admin.declareBinding(orderBinding());
-
-		admin.declareQueue(queryQueue());
-		admin.declareBinding(queryBinding());
-	}
 	
-	@Bean
-    public RestOperations restTemplate() {
-        return new RestTemplate();
-    }
 
 	//spring cloud settings - distributed command bus
-	@Bean
+	/*@Bean
     public CommandRouter springCloudCommandRouter(DiscoveryClient discoveryClient, Registration localServiceInstance) {
         return SpringCloudCommandRouter.builder()
                                        .discoveryClient(discoveryClient)
                                        .routingStrategy(new AnnotationRoutingStrategy())
                                        .localServiceInstance(localServiceInstance)
                                        .build();
-    }
+    }*/
 
 	@Bean
     public CommandBusConnector springHttpCommandBusConnector(
@@ -111,5 +63,28 @@ public class InvoiceServiceApplication {
                                     .commandRouter(commandRouter)
                                     .connector(commandBusConnector)
                                     .build();
+    }
+    
+    // if you don't use Spring Boot Autoconfiguration, you will need to explicitly define the local segment:
+    @Bean
+    @Qualifier("localSegment")
+    public CommandBus localSegment() {
+        return SimpleCommandBus.builder().build();
+    }
+    
+    @Bean
+    public CommandRouter springCloudHttpBackupCommandRouter(
+                             DiscoveryClient discoveryClient, 
+                             RestTemplate restTemplate,
+                             Registration localServiceInstance,                             
+                             @Value("${axon.distributed.spring-cloud.fallback-url}") 
+                                         String messageRoutingInformationEndpoint) {
+        return SpringCloudHttpBackupCommandRouter.builder()
+                                                 .discoveryClient(discoveryClient)
+                                                 .routingStrategy(new AnnotationRoutingStrategy())
+                                                 .restTemplate(restTemplate)
+                                                 .localServiceInstance(localServiceInstance)
+                                                 .messageRoutingInformationEndpoint(messageRoutingInformationEndpoint)
+                                                 .build();
     }
 }

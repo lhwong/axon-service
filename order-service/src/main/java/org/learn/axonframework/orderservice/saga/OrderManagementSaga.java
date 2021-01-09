@@ -2,6 +2,7 @@ package org.learn.axonframework.orderservice.saga;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
+import org.axonframework.messaging.RemoteHandlingException;
 import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.StartSaga;
@@ -24,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Saga
-@ProcessingGroup("amqpEvents")
+@ProcessingGroup("ordersaga")
 public class OrderManagementSaga {
 
     private static final Logger log = LoggerFactory.getLogger(OrderManagementSaga.class.getSimpleName());
@@ -49,7 +50,16 @@ public class OrderManagementSaga {
 
         //request shipment
         log.info("sending PrepareShipmentCommand");
-        commandGateway.send(new PrepareShipmentCommand(orderId, productInfo));
+        //commandGateway.send(new PrepareShipmentCommand(orderId, productInfo));
+        commandGateway.send(new PrepareShipmentCommand(orderId, productInfo), (commandMessage, commandResultMessage) -> {
+            if (commandResultMessage.isExceptional()) {
+                Throwable throwable = commandResultMessage.exceptionResult();
+                log.error("Error sending PrepareShipmentCommand: " + throwable.getMessage(), throwable);
+            } else {
+                String commandResult = (String) commandResultMessage.getPayload();
+                log.info("PrepareShipmentCommand sent: " + commandResult);
+            }
+        });
 
         //request invoice
         log.info("sending PrepareInvoiceCommand");
@@ -105,7 +115,16 @@ public class OrderManagementSaga {
         log.info(String.format("compensation of saga for model [%s] with casuse - %s", orderId, cause));
 
         compensating = true;
-        commandGateway.send(new CompensateShipmentCommand(orderId, cause));
+        //commandGateway.send(new CompensateShipmentCommand(orderId, cause));
+        commandGateway.send(new CompensateShipmentCommand(orderId, cause), (commandMessage, commandResultMessage) -> {
+            if (commandResultMessage.isExceptional()) {
+                Throwable throwable = commandResultMessage.exceptionResult();
+                log.error("Error sending CompensateShipmentCommand: " + throwable.getMessage(), throwable);
+            } else {
+                String commandResult = (String) commandResultMessage.getPayload();
+                log.info("CompensateShipmentCommand sent: " + commandResult);
+            }
+        });
         commandGateway.send(new CompensateInvoiceCommand(orderId, cause));
     }
 

@@ -10,21 +10,30 @@ import org.learn.axonframework.coreapi.OrderCompletedEvent;
 import org.learn.axonframework.coreapi.OrderFiledEvent;
 import org.learn.axonframework.orderservice.command.FileOrderCommand;
 import org.learn.axonframework.orderservice.command.OrderCompletedCommand;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
 
-@NoArgsConstructor
+//@NoArgsConstructor
 @Aggregate
 public class OrderAggregate {
+
+	private static final Logger log = LoggerFactory.getLogger(OrderAggregate.class);
 
     @AggregateIdentifier
     private String orderId;
 
     private boolean completed;
 
+    public OrderAggregate() {
+    	
+    }
+    
     @CommandHandler
     public OrderAggregate(FileOrderCommand command) {
+    	log.info("handle FileOrderCommand " + command.getOrderId());
         apply(new OrderFiledEvent(command.getOrderId(), command.getProductInfo()));
     }
 

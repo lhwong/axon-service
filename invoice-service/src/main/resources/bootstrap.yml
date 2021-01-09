@@ -2,27 +2,45 @@ spring:
   application:
     name: invoice-service
 
-  #H2DB
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQL5InnoDBDialect
   datasource:
-    url: jdbc:h2:file:~/workspace/invoiceDB;DB_CLOSE_ON_EXIT=FALSE;AUTO_SERVER=TRUE
-    username: test
-    password: test
-    driverClassName: org.h2.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/invoicedb?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    username: admin
+    password: password
 
-  rabbitmq:
-    user: guest
-    password: guest
-    host: ${RABBITMQ_HOST:127.0.0.1}
-    port: 5672
+
 
 # HTTP Server
 server:
   port: 8082   # HTTP (Tomcat) port
 
 axon:
-  amqp:
-    exchange: InvoiceEvents
+  snapshot:
+    trigger:
+      treshold:
+        invoice: 100
+  kafka:
+    #client-id: invoice-command
+    default-topic: axon-events
+    producer:
+      retries: 5
+      bootstrap-servers: 192.168.99.100:9092
+      transaction-id-prefix: invoicetx
+      event-processor-mode: subscribing
+    consumer:
+      group-id: invoice-command-group
+      bootstrap-servers: 192.168.99.100:9092
+      event-processor-mode: tracking
 
   distributed:
     enabled: true
+    spring-cloud:
+      fallback-to-http-get: true
+      fallback-url: /message-routing-information   
+  serializer:
+    messages: xstream   
 

@@ -22,15 +22,17 @@ import javax.persistence.Id;
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 import static org.axonframework.modelling.command.AggregateLifecycle.markDeleted;
 
+import java.io.FileNotFoundException;
+
 
 @NoArgsConstructor
-@Entity
+//@Entity
 @Aggregate
 public class Shipment {
 
     private static final Logger log = LoggerFactory.getLogger(Shipment.class);
 
-    @Id
+    //@Id
     private String id;
 
     @AggregateIdentifier
@@ -40,6 +42,7 @@ public class Shipment {
 
     private int price;
 
+    
     public Shipment(String id, String orderId, String productName, int price) {
         this.id = id;
         this.orderId = orderId;
@@ -48,12 +51,13 @@ public class Shipment {
     }
 
     @CommandHandler
-    public Shipment(PrepareShipmentCommand command) throws InterruptedException {
+    public Shipment(PrepareShipmentCommand command) throws InterruptedException, FileNotFoundException {
         log.info("received PrepareShipmentCommand command for order: " + command.getOrderId());
         String id = Util.generateId();
 
         if (command.getProductInfo().getProductId().equals("failShipment")) {
             //simulate saga compensation
+        	
             log.info("failing shipment creation");
             apply(new ShipmentPreparationFailedEvent(id, command.getOrderId(), "simulated saga fail"));
         } else {

@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <version.axon>3.1.2</version.axon>
+        <version.axon>4.3</version.axon>
     </properties>
 
     <modules>
